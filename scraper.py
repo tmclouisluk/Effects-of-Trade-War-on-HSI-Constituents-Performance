@@ -29,7 +29,7 @@ def extract_data(browser, link):
 
 def main():
     chrome_driver_path = "C:\chromedriver.exe"
-    base_link = "https://www.buzzfeednews.com/"
+    base_link = "http://www3.hkexnews.hk/listedco/listconews/advancedsearch/search_active_main.aspx"
     try:
         browser = webdriver.Chrome(chrome_driver_path)
 

@@ -16,12 +16,13 @@ data_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
 def read_stock_list(path):
-    pass
+    df = pd.read_excel(path)
+    return df
 
 
 def download_finanical_statement(link, no, year):
     options = webdriver.ChromeOptions()
-    download_folder = os.path.join(data_folder, no)
+    download_folder = os.path.join(data_folder, str(no))
 
     prefs = {"plugins.always_open_pdf_externally": True,
              "download.default_directory": download_folder,
@@ -34,7 +35,7 @@ def download_finanical_statement(link, no, year):
     try:
         #set params
         input_stock_code = browser.find_element_by_css_selector('#ctl00_txt_stock_code')
-        input_stock_code.send_keys(no)
+        input_stock_code.send_keys(str(no))
 
         input_category = browser.find_element_by_css_selector('#ctl00_rbAfter2006')
         input_category.click()
@@ -52,7 +53,8 @@ def download_finanical_statement(link, no, year):
 
         a_report_links = browser.find_elements_by_css_selector('a.news')
         for a in a_report_links:
-            a.click()
+            if "pdf" in a.get_attribute("href"):
+                a.click()
             #browser.get(a.get_attribute("href"))
 
     except Exception as ex:
@@ -72,22 +74,34 @@ def download_finanical_statement(link, no, year):
     browser.quit()
 
 
-def get_stock_price(no, year):
+def get_stock_price(no, year, count=0):
     yf.pdr_override()
-    data_frame = pdr.get_data_yahoo("%04d.HK" % int(no), start=datetime.datetime.now() - relativedelta(years=year), end=datetime.datetime.now())
-    return data_frame
+    try:
+        if count < 3:
+            stock_code = "%04d.HK" % int(no)
+            data_frame = pdr.get_data_yahoo(stock_code, start=datetime.datetime.now() - relativedelta(years=year), end=datetime.datetime.now())
+            return data_frame
+        else:
+            return pd.DataFrame()
+    except Exception as e:
+        count = count + 1
+        return get_stock_price(no, year, count)
 
 
 def main():
     base_link = "http://www3.hkexnews.hk/listedco/listconews/advancedsearch/search_active_main.aspx"
-    path_stock_list = "./data/stock"
+    path_stock_list = "./data/stock.xlsx"
     year = 3
     try:
-        stock_list=read_stock_list(path_stock_list)
-        for stock in stock_list:
-            get_stock_price("1", year)
-            download_finanical_statement(base_link, "1", year)
-
+        stock_list = read_stock_list(path_stock_list)
+        total_stock = pd.DataFrame()
+        for index, row in stock_list.iterrows():
+            stock_code = row['Stock Code']
+            stock_price = get_stock_price(stock_code, year)
+            download_finanical_statement(base_link, stock_code, year)
+            stock_price.to_pickle('./data/%s.pkl' % (stock_code))
+            total_stock = pd.concat([total_stock, stock_price])
+        total_stock.to_pickle('./data/total/%s.pkl' % ("total"))
 
     except Exception as e:
         print(e)

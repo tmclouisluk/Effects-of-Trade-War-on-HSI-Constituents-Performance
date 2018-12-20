@@ -1,17 +1,15 @@
-import datetime
-
 import os
+from threading import Thread
+
 import pandas as pd
-import json
 import slate3k as slate
-import PyPDF2
-import re
+import numpy as np
 
 
 data_path = "./data"
-total_stock_path = './data/total/%s.pkl' % ("total")
 countries_path = './data/countries.xls'
 path_stock_list = "./data/stock.xlsx"
+
 
 def get_total_stock():
     total_stock = pd.DataFrame()
@@ -50,7 +48,7 @@ def analysis_finanical_statement(code, countries):
     dir_path = os.path.join(data_path, str(code))
     listdir = os.listdir(dir_path)
     total_countries_df = pd.DataFrame()
-
+    print("%s start" % (code))
     for file in listdir:
         try:
             if file.endswith(".pdf"):
@@ -75,16 +73,36 @@ def analysis_finanical_statement(code, countries):
         except Exception as e:
             print(code, e)
 
+    total_countries_df.to_pickle('./data/total/%s%s.pkl' % (code, "_analysis"))
     print("%s done" % (code))
     return total_countries_df
 
 
-countries = get_countries(countries_path)
-stock_list = read_stock_list(path_stock_list)
-total_analysis_stock = pd.DataFrame()
-for index, row in stock_list.iterrows():
-    stock_code = row['Stock Code']
-    analysis_stock = analysis_finanical_statement(stock_code, countries)
-    total_analysis_stock = pd.concat([total_analysis_stock, analysis_stock])
+def batch_analysis_finanical_statement(codes, countries):
+    for index, row in codes.iterrows():
+        stock_code = row['Stock Code']
+        analysis_stock = analysis_finanical_statement(stock_code, countries)
 
-total_analysis_stock.to_pickle('./data/total/%s.pkl' % ("total_analysis_stock"))
+
+def main():
+    threads = []
+    cluster = 10
+    countries = get_countries(countries_path)
+    stock_list = read_stock_list(path_stock_list)
+
+    stock_list_parts = np.split(stock_list, cluster)
+
+    try:
+        for c in stock_list_parts:
+            t = Thread(target=batch_analysis_finanical_statement, args=(c, countries))
+            t.daemon = True
+            threads.append(t)
+            t.start()
+
+        for t in threads:
+            t.join()
+
+    except Exception as e:
+        print("Error: unable to start thread")
+
+main()

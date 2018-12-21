@@ -7,7 +7,7 @@ import numpy as np
 
 
 data_path = "./data"
-countries_path = './data/countries.xls'
+countries_path = './data/countries.xlsx'
 path_stock_list = "./data/stock.xlsx"
 
 
@@ -56,15 +56,16 @@ def analysis_finanical_statement(code, countries):
                 pdf_text = read_pdf(pdf_path)
                 all_pdf_text = " ".join(pdf_text)
 
-                countries_df = countries[['Country']]
+                countries_df = pd.DataFrame()
+                countries_df['Country'] = pd.unique(countries['country'])
                 countries_df["Count"] = 0
                 countries_df["Stock Code"] = code
                 countries_df["Year"] = file[3:7]
                 countries_df["Month"] = file[7:9]
                 for index, row in countries.iterrows():
                     try:
-                        if row['Country'].lower() in all_pdf_text.lower():
-                            countries_df.loc[countries_df['Country'] == row['Country'], "Count"] += 1
+                        if row['city_ascii'].lower() in all_pdf_text.lower():
+                            countries_df.loc[countries_df['Country'] == row['country'], "Count"] += 1
 
                     except Exception as e:
                         print(code, e)

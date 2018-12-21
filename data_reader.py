@@ -8,13 +8,14 @@ import re
 
 data_path = "./data"
 total_stock_path = './data/total/%s.pkl' % ("total")
-countries_path = './data/countries.xls'
+countries_path = './data/countries.xlsx'
 path_stock_list = "./data/stock.xlsx"
 pdf_analysis_path = './data/total'
 
 
 def get_countries(path):
     df = pd.read_excel(path)
+    df = pd.unique(df['country'])
     return df
 
 
@@ -43,6 +44,7 @@ def get_total_stock_analysis(stock_list, path):
     return total
 
 
+countries = get_countries(countries_path)
 stock_list = read_stock_list(path_stock_list)
 total_stock_price = get_total_stock(total_stock_path)
 total_stock_analysis = get_total_stock_analysis(stock_list, pdf_analysis_path)

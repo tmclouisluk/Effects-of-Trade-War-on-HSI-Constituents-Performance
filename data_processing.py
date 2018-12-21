@@ -31,6 +31,7 @@ def normalize_total_stock(stock_list):
         stock_price = pd.read_pickle('./data/%s.pkl' % (stock_code))
         stock_price = stock_price.reset_index()
         stock_start = stock_price.loc[0]
+        stock_price['Stock Code'] = stock_code
         stock_price['Norm Close'] = stock_price.apply(lambda x: x['Close']/stock_start['Close'], axis=1)
         stock_price.to_pickle('./data/%s.pkl' % (stock_code))
         total_stock = pd.concat([total_stock, stock_price])
@@ -63,7 +64,7 @@ def normalize_total_stock_analysis(stock_list, countries, path):
 
 
 
-countries = get_countries(countries_path)
+#countries = get_countries(countries_path)
 stock_list = read_stock_list(path_stock_list)
-#normalize_total_stock(stock_list)
-normalize_total_stock_analysis(stock_list, countries, pdf_analysis_path)
+normalize_total_stock(stock_list)
+#normalize_total_stock_analysis(stock_list, countries, pdf_analysis_path)

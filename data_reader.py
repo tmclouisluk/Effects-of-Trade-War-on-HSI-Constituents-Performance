@@ -13,7 +13,7 @@ total_stock_path = './data/total/%s.pkl' % ("total")
 countries_path = './data/countries.xlsx'
 path_stock_list = "./data/stock.xlsx"
 pdf_analysis_path = './data/total'
-
+hsi_etf_path = './data/2800.pkl'
 
 def get_countries(path):
     df = pd.read_excel(path)
@@ -46,10 +46,15 @@ def get_total_stock_analysis(stock_list, path):
     return total
 
 
+def get_hsi_etf(path):
+    df = pd.read_pickle(path)
+    return df
+
 countries = get_countries(countries_path)
 stock_list = read_stock_list(path_stock_list)
 total_stock_price = get_total_stock(total_stock_path)
 total_stock_analysis = get_total_stock_analysis(stock_list, pdf_analysis_path)
+stock_price_2800 = get_hsi_etf(hsi_etf_path)
 
 country_stock_mean = total_stock_analysis.groupby(['Country', "lat", "lng", "Stock Code"])['Percent'].mean().reset_index()
 
